@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>India Travel Agent — Powered by IBM watsonx AI</title>
+    <style>
+      /* ── Reset & Base ─────────────────────────────────────────── */
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --saffron: #FF9933;
+        --india-green: #138808;
+        --navy: #000080;
+        --white: #ffffff;
+        --bg: #f5f3ee;
+        --surface: #ffffff;
+        --border: #e2ddd5;
+        --text: #1a1a2e;
+        --muted: #6b6b80;
+        --user-bubble: #FF9933;
+        --ai-bubble: #f0ede6;
+        --accent: #138808;
+        --shadow: 0 2px 12px rgba(0,0,0,0.08);
+      }
+
+      html, body {
+        height: 100%;
+        font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      /* ── Layout ───────────────────────────────────────────────── */
+      .app {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--surface);
+        box-shadow: var(--shadow);
+      }
+
+      /* ── Header ───────────────────────────────────────────────── */
+      header {
+        background: linear-gradient(135deg, var(--navy) 0%, #1a237e 60%, var(--india-green) 100%);
+        color: var(--white);
+        padding: 0;
+        flex-shrink: 0;
+      }
+
+      .header-inner {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        padding: 16px 24px;
+      }
+
+      .logo-circle {
+        width: 52px;
+        height: 52px;
+        border-radius: 50%;
+        background: var(--white);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 26px;
+        flex-shrink: 0;
+        border: 2px solid var(--saffron);
+      }
+
+      .header-text h1 {
+        font-size: 1.35rem;
+        font-weight: 700;
+        letter-spacing: -0.3px;
+      }
+
+      .header-text p {
+        font-size: 0.8rem;
+        opacity: 0.85;
+        margin-top: 2px;
+      }
+
+      .status-badge {
+        margin-left: auto;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.75rem;
+        background: rgba(255,255,255,0.15);
+        border: 1px solid rgba(255,255,255,0.3);
+        border-radius: 20px;
+        padding: 4px 12px;
+      }
+
+      .status-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #4caf50;
+        animation: pulse 2s infinite;
+      }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+      }
+
+      /* ── Tricolor strip ───────────────────────────────────────── */
+      .tricolor {
+        height: 4px;
+        background: linear-gradient(to right, var(--saffron) 33.3%, var(--white) 33.3%, var(--white) 66.6%, var(--india-green) 66.6%);
+      }
+
+      /* ── Quick Suggestions ────────────────────────────────────── */
+      .suggestions-bar {
+        display: flex;
+        gap: 8px;
+        padding: 12px 20px;
+        overflow-x: auto;
+        flex-shrink: 0;
+        background: #faf9f6;
+        border-bottom: 1px solid var(--border);
+        scrollbar-width: none;
+      }
+
+      .suggestions-bar::-webkit-scrollbar { display: none; }
+
+      .suggestion-chip {
+        white-space: nowrap;
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 0.78rem;
+        cursor: pointer;
+        color: var(--text);
+        transition: background 0.15s, border-color 0.15s;
+        flex-shrink: 0;
+      }
+
+      .suggestion-chip:hover {
+        background: var(--saffron);
+        border-color: var(--saffron);
+        color: var(--white);
+      }
+
+      /* ── Chat Window ──────────────────────────────────────────── */
+      .chat-window {
+        flex: 1;
+        overflow-y: auto;
+        padding: 24px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
+        scroll-behavior: smooth;
+      }
+
+      /* ── Welcome Card ─────────────────────────────────────────── */
+      .welcome-card {
+        text-align: center;
+        padding: 32px 20px;
+        background: linear-gradient(135deg, #fff8f0, #f0f7f0);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        max-width: 560px;
+        margin: 0 auto;
+        width: 100%;
+      }
+
+      .welcome-card .flag-emoji { font-size: 3rem; margin-bottom: 12px; }
+
+      .welcome-card h2 {
+        font-size: 1.25rem;
+        color: var(--navy);
+        margin-bottom: 8px;
+      }
+
+      .welcome-card p {
+        font-size: 0.88rem;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+
+      .destination-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-top: 18px;
+      }
+
+      .dest-tag {
+        background: var(--white);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 6px 8px;
+        font-size: 0.76rem;
+        color: var(--navy);
+        font-weight: 500;
+        cursor: pointer;
+        text-align: center;
+        transition: background 0.15s;
+      }
+
+      .dest-tag:hover {
+        background: var(--navy);
+        color: var(--white);
+        border-color: var(--navy);
+      }
+
+      /* ── Message Bubbles ──────────────────────────────────────── */
+      .message {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        max-width: 82%;
+        animation: fadeSlideIn 0.25s ease;
+      }
+
+      @keyframes fadeSlideIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to   { opacity: 1; transform: translateY(0); }
+      }
+
+      .message.user {
+        margin-left: auto;
+        flex-direction: row-reverse;
+      }
+
+      .avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+
+      .user .avatar { background: var(--saffron); }
+      .ai .avatar   { background: var(--navy); }
+
+      .bubble {
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 0.9rem;
+        line-height: 1.65;
+        word-break: break-word;
+        max-width: 100%;
+      }
+
+      .user .bubble {
+        background: var(--saffron);
+        color: var(--white);
+        border-top-right-radius: 4px;
+      }
+
+      .ai .bubble {
+        background: var(--ai-bubble);
+        color: var(--text);
+        border-top-left-radius: 4px;
+        border: 1px solid var(--border);
+      }
+
+      /* Markdown-ish rendering inside AI bubble */
+      .ai .bubble h3   { font-size: 1rem; font-weight: 700; color: var(--navy); margin: 10px 0 4px; }
+      .ai .bubble ul   { padding-left: 18px; margin: 6px 0; }
+      .ai .bubble li   { margin: 3px 0; }
+      .ai .bubble strong { color: var(--navy); }
+      .ai .bubble em   { color: var(--muted); }
+      .ai .bubble p    { margin: 5px 0; }
+      .ai .bubble hr   { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+
+      /* ── Typing Indicator ─────────────────────────────────────── */
+      .typing-indicator {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        padding: 12px 16px;
+        background: var(--ai-bubble);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        border-top-left-radius: 4px;
+        width: fit-content;
+      }
+
+      .typing-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: var(--muted);
+        animation: bounce 1.2s infinite;
+      }
+
+      .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+      .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+      @keyframes bounce {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+        40%            { transform: translateY(-6px); opacity: 1; }
+      }
+
+      /* ── Input Area ───────────────────────────────────────────── */
+      .input-area {
+        flex-shrink: 0;
+        border-top: 1px solid var(--border);
+        background: var(--surface);
+        padding: 14px 20px;
+      }
+
+      .input-row {
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+      }
+
+      #user-input {
+        flex: 1;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        font-family: inherit;
+        resize: none;
+        outline: none;
+        max-height: 140px;
+        line-height: 1.5;
+        color: var(--text);
+        background: #faf9f6;
+        transition: border-color 0.15s;
+      }
+
+      #user-input:focus { border-color: var(--saffron); background: var(--white); }
+      #user-input::placeholder { color: var(--muted); }
+
+      #send-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        border: none;
+        background: var(--navy);
+        color: var(--white);
+        cursor: pointer;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 0.15s, transform 0.1s;
+      }
+
+      #send-btn:hover   { background: var(--saffron); }
+      #send-btn:active  { transform: scale(0.94); }
+      #send-btn:disabled { background: var(--border); cursor: not-allowed; }
+
+      .input-hint {
+        font-size: 0.72rem;
+        color: var(--muted);
+        margin-top: 6px;
+        text-align: center;
+      }
+
+      /* ── Error Toast ──────────────────────────────────────────── */
+      .error-toast {
+        background: #fff0f0;
+        border: 1px solid #f5c6c6;
+        color: #c0392b;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-size: 0.82rem;
+        text-align: center;
+      }
+
+      /* ── Responsive ───────────────────────────────────────────── */
+      @media (max-width: 600px) {
+        .message { max-width: 94%; }
+        .destination-grid { grid-template-columns: repeat(2, 1fr); }
+        .header-text h1 { font-size: 1.1rem; }
+        .status-badge span { display: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+
+      <!-- Header -->
+      <header>
+        <div class="header-inner">
+          <div class="logo-circle">🕌</div>
+          <div class="header-text">
+            <h1>India Travel Agent</h1>
+            <p>Powered by IBM watsonx AI • Your expert guide across Incredible India</p>
+          </div>
+          <div class="status-badge" id="status-badge">
+            <div class="status-dot"></div>
+            <span>AI Online</span>
+          </div>
+        </div>
+        <div class="tricolor"></div>
+      </header>
+
+      <!-- Quick Suggestions Bar -->
+      <div class="suggestions-bar">
+        <button class="suggestion-chip" onclick="sendSuggestion('Best places to visit in Rajasthan')">🏰 Rajasthan</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Plan a Kerala backwaters trip for 5 days')">🌴 Kerala Backwaters</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Goa travel guide for beach lovers')">🏖️ Goa</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Best time to visit Ladakh and Leh')">🏔️ Ladakh</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Northeast India hidden gems')">🌿 Northeast India</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Budget travel across India tips')">💰 Budget Travel</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Andaman Islands travel itinerary')">🐠 Andaman Islands</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Best hill stations in India to beat the heat')">⛰️ Hill Stations</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Top temples to visit in South India')">🛕 South India Temples</button>
+        <button class="suggestion-chip" onclick="sendSuggestion('Mumbai to Goa road trip plan')">🚗 Road Trips</button>
+      </div>
+
+      <!-- Chat Window -->
+      <div class="chat-window" id="chat-window">
+        <div class="welcome-card">
+          <div class="flag-emoji">🇮🇳</div>
+          <h2>Namaste! Welcome to Your India Travel Planner</h2>
+          <p>
+            I'm your AI-powered travel expert for <strong>Incredible India</strong>. Ask me about
+            destinations, itineraries, budgets, food, culture, or anything to plan your perfect
+            Indian adventure!
+          </p>
+          <div class="destination-grid">
+            <div class="dest-tag" onclick="sendSuggestion('Tell me about Varanasi')">🕯️ Varanasi</div>
+            <div class="dest-tag" onclick="sendSuggestion('Himachal Pradesh travel guide')">❄️ Himachal</div>
+            <div class="dest-tag" onclick="sendSuggestion('Mysore and Coorg travel plan')">☕ Coorg</div>
+            <div class="dest-tag" onclick="sendSuggestion('Rann of Kutch festival and travel')">🎪 Rann Utsav</div>
+            <div class="dest-tag" onclick="sendSuggestion('Odisha temples travel guide')">🛕 Odisha</div>
+            <div class="dest-tag" onclick="sendSuggestion('Spiti Valley adventure trip')">🏔️ Spiti Valley</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Area -->
+      <div class="input-area">
+        <div class="input-row">
+          <textarea
+            id="user-input"
+            rows="1"
+            placeholder="Ask about any destination in India… e.g. 'Plan a 10-day trip to Rajasthan'"
+          ></textarea>
+          <button id="send-btn" onclick="sendMessage()" title="Send">
+            ➤
+          </button>
+        </div>
+        <div class="input-hint">Press Enter to send • Shift+Enter for new line</div>
+      </div>
+
+    </div>
+
+    <script>
+      // ── Config ───────────────────────────────────────────────────
+      const API_BASE = "http://localhost:3001/api";
+
+      // ── State ────────────────────────────────────────────────────
+      let conversationHistory = [];
+      let isLoading = false;
+
+      // ── DOM Refs ─────────────────────────────────────────────────
+      const chatWindow = document.getElementById("chat-window");
+      const userInput  = document.getElementById("user-input");
+      const sendBtn    = document.getElementById("send-btn");
+
+      // ── Auto-resize textarea ─────────────────────────────────────
+      userInput.addEventListener("input", () => {
+        userInput.style.height = "auto";
+        userInput.style.height = Math.min(userInput.scrollHeight, 140) + "px";
+      });
+
+      // ── Keyboard shortcut ────────────────────────────────────────
+      userInput.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          if (!isLoading) sendMessage();
+        }
+      });
+
+      // ── Send Suggestion chip / dest-tag ─────────────────────────
+      function sendSuggestion(text) {
+        userInput.value = text;
+        sendMessage();
+      }
+
+      // ── Append message to chat ───────────────────────────────────
+      function appendMessage(role, content) {
+        // Remove welcome card on first message
+        const welcomeCard = chatWindow.querySelector(".welcome-card");
+        if (welcomeCard) welcomeCard.remove();
+
+        const wrapper = document.createElement("div");
+        wrapper.className = `message ${role === "user" ? "user" : "ai"}`;
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = role === "user" ? "👤" : "🤖";
+
+        const bubble = document.createElement("div");
+        bubble.className = "bubble";
+        bubble.innerHTML = formatResponse(content);
+
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(bubble);
+        chatWindow.appendChild(wrapper);
+        scrollToBottom();
+        return wrapper;
+      }
+
+      // ── Typing indicator ─────────────────────────────────────────
+      function showTyping() {
+        const wrapper = document.createElement("div");
+        wrapper.className = "message ai";
+        wrapper.id = "typing-msg";
+
+        const avatar = document.createElement("div");
+        avatar.className = "avatar";
+        avatar.textContent = "🤖";
+
+        const indicator = document.createElement("div");
+        indicator.className = "typing-indicator";
+        indicator.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+
+        wrapper.appendChild(avatar);
+        wrapper.appendChild(indicator);
+        chatWindow.appendChild(wrapper);
+        scrollToBottom();
+      }
+
+      function hideTyping() {
+        const el = document.getElementById("typing-msg");
+        if (el) el.remove();
+      }
+
+      // ── Error display ────────────────────────────────────────────
+      function appendError(msg) {
+        const el = document.createElement("div");
+        el.className = "error-toast";
+        el.textContent = "⚠️ " + msg;
+        chatWindow.appendChild(el);
+        scrollToBottom();
+      }
+
+      // ── Basic markdown → HTML ────────────────────────────────────
+      function formatResponse(text) {
+        return text
+          .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+          .replace(/\*(.+?)\*/g, "<em>$1</em>")
+          .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+          .replace(/^## (.+)$/gm,  "<h3>$1</h3>")
+          .replace(/^# (.+)$/gm,   "<h3>$1</h3>")
+          .replace(/^[-*] (.+)$/gm, "<li>$1</li>")
+          .replace(/(<li>.*<\/li>)/gs, "<ul>$1</ul>")
+          .replace(/\n{2,}/g, "</p><p>")
+          .replace(/\n/g, "<br>")
+          .replace(/^(.+)$/, "<p>$1</p>");
+      }
+
+      // ── Scroll to bottom ─────────────────────────────────────────
+      function scrollToBottom() {
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }
+
+      // ── Main send function ───────────────────────────────────────
+      async function sendMessage() {
+        const text = userInput.value.trim();
+        if (!text || isLoading) return;
+
+        // Add user message to history and UI
+        conversationHistory.push({ role: "user", content: text });
+        appendMessage("user", text);
+
+        userInput.value = "";
+        userInput.style.height = "auto";
+        isLoading = true;
+        sendBtn.disabled = true;
+        showTyping();
+
+        try {
+          const response = await fetch(`${API_BASE}/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ messages: conversationHistory }),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || "Server error");
+          }
+
+          const reply = data.reply;
+          conversationHistory.push({ role: "assistant", content: reply });
+          hideTyping();
+          appendMessage("ai", reply);
+
+        } catch (err) {
+          hideTyping();
+          appendError(err.message || "Could not reach the travel agent. Make sure the backend is running.");
+          conversationHistory.pop(); // remove failed user msg from history
+        } finally {
+          isLoading = false;
+          sendBtn.disabled = false;
+          userInput.focus();
+        }
+      }
+    </script>
+  </body>
+</html>
